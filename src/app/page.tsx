@@ -9,7 +9,7 @@ export default function Admin() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [url, setUrl] = useState("");
-  const [category, setCategory] = useState("Teknologi, Otomotif"); // Kategori default
+  const [category, setCategory] = useState("Teknologi"); // Kategori default
   const [isEditing, setIsEditing] = useState(false);
   const [currentArticleId, setCurrentArticleId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,6 +18,7 @@ export default function Admin() {
   const [darkMode, setDarkMode] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 6; // Jumlah artikel per halaman
+  const [tempArticle, setTempArticle] = useState(null); // Menyimpan artikel sementara
 
   useEffect(() => {
     const getArticles = async () => {
@@ -86,6 +87,18 @@ export default function Admin() {
     }
   };
 
+  const handleDeleteAllArticles = async () => {
+    try {
+      await Promise.all(articles.map(article => axios.delete(`https://api.example.com/articles/${article.id}`))); // Ganti dengan API Anda
+      setArticles([]);
+      setMessage("Semua artikel berhasil dihapus!");
+      Toast("Semua artikel berhasil dihapus!"); // Menampilkan toast
+    } catch (error) {
+      console.error("Error deleting all articles:", error);
+      setMessage("Gagal menghapus semua artikel.");
+    }
+  };
+
   const resetForm = () => {
     setTitle("");
     setDescription("");
@@ -96,7 +109,8 @@ export default function Admin() {
   };
 
   const filteredArticles = articles.filter((article) =>
-    article.title.toLowerCase().includes(searchTerm.toLowerCase())
+    article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    article.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Pagination logic
@@ -174,47 +188,66 @@ export default function Admin() {
 
       {loading ? (
         <div className="text-center">Loading...</div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {currentArticles.map((article, index) => (
-            <div key={index} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg">
-              <img src={article.urlToImage} alt={article.title} className="w-full h-48 object-cover rounded-md" />
-              <h2 className="text-xl font-semibold mt-3">{article.title}</h2>
-              <p className="text-gray-700 text-sm">{article.description}</p>
-              <a href={article.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 mt-2 block hover:underline">
-                Baca Selengkapnya →
-              </a>
-              <div className="mt-4 flex justify-between">
-                <button
-                  onClick={() => handleEditArticle(article)}
-                  className="bg-yellow-500 text-white p-2 rounded"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteArticle(article.id)} // Ganti dengan ID artikel yang sesuai
-                  className="bg-red-500 text-white p-2 rounded"
-                >
-                  Hapus
-                </button>
-              </div>
+      ) : (        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {currentArticles.map((article, index) => (
+          <div key={index} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg">
+            <img src={article.urlToImage} alt={article.title} className="w-full h-48 object-cover rounded-md" />
+            <h2 className="text-xl font-semibold mt-3">{article.title}</h2>
+            <p className="text-gray-700 text-sm">{article.description}</p>
+            <a href={article.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 mt-2 block hover:underline">
+              Baca Selengkapnya →
+            </a>
+            <div className="mt-4 flex justify-between">
+              <button
+                onClick={() => handleEditArticle(article)}
+                className="bg-yellow-500 text-white p-2 rounded"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDeleteArticle(article.id)} // Ganti dengan ID artikel yang sesuai
+                className="bg-red-500 text-white p-2 rounded"
+              >
+                Hapus
+              </button>
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* Pagination */}
-      <div className="flex justify-center mt-4">
-        {Array.from({ length: totalPages }, (_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentPage(index + 1)}
-            className={`mx-1 p-2 rounded ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-300'}`}
-          >
-            {index + 1}
-          </button>
+          </div>
         ))}
       </div>
+    )}
+
+    {/* Pagination */}
+    <div className="flex justify-center mt-4">
+      {Array.from({ length: totalPages }, (_, index) => (
+        <button
+          key={index}
+          onClick={() => setCurrentPage(index + 1)}
+          className={`mx-1 p-2 rounded ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-300'}`}
+        >
+          {index + 1}
+        </button>
+      ))}
     </div>
-  );
+
+    {/* Tombol Hapus Semua */}
+    <div className="flex justify-center mt-4">
+      <button
+        onClick={handleDeleteAllArticles}
+        className="bg-red-600 text-white p-2 rounded"
+      >
+        Hapus Semua Artikel
+      </button>
+    </div>
+
+    {/* Tombol Kembali ke Halaman Pertama */}
+    <div className="flex justify-center mt-4">
+      <button
+        onClick={() => setCurrentPage(1)}
+        className="bg-gray-500 text-white p-2 rounded"
+      >
+        Kembali ke Halaman Pertama
+      </button>
+    </div>
+  </div>
+);
 }
